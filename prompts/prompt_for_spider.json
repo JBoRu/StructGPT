@@ -1,0 +1,11 @@
+{
+    "chat": {
+      "system": "You are a helpful assistant.",
+      "free_generate": "### Here are the Sqlite SQL tables, with their properties:\n#\n{table}\n#\n### {question} Which tables do you need to complete the SQLite SQL query? Let's think step by step.",
+      "table_column_select_reorganize": "Sure! Based on your response, provide only the required tables in the following format: 'Table_Name_1 | Table_Name_2' to simplify your response, which means using '|' to separate different tables. Don't use any other format or add any additional explanations.",
+      "ask_final_answers": {
+        "has_fk": "### Complete sqlite SQL query only and with no explanation.\n#\n### Sqlite SQL tables, with their properties: \n#\n{table}\n# {fk}\n#\n### {question}\n SELECT",
+        "no_fk": "### Complete sqlite SQL query only and with no explanation.\n#\n### Sqlite SQL tables, with their properties: \n#\n{table}\n#\n### {question}\n SELECT"
+      }
+    }
+}
