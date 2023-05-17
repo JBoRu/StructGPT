@@ -14,8 +14,8 @@ This repo provides the source code & data of our paper: [StructGPT: A general fr
 
 
 <p align="center">
-  <img src="./asset/model.png" width="500" title="Overview of StructGPT" alt="">
+  <img src="./asset/model.png" width="750" title="Overview of StructGPT" alt="">
 </p>
 
-Note:
+**Note:**
 Thanks for your attention. We currently provide code of Spider and TabFact for interested researchers to quickly understand our StructGPT framework, complete data and code will be coming as soon as possible.
