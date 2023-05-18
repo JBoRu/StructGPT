@@ -53,6 +53,7 @@ Similarly, you can run the corresponding script for **Spider-SYN** and **Spider-
 </p>
 We save all the prediction file in *outputs/* directory.
 
+
 **Note:**
 Thanks for your attention. We currently update code for DB-based Text-to-SQL for interested researchers to quickly understand our StructGPT framework.
 Code for TableQA will be coming tomorrow!
