@@ -54,4 +54,5 @@ Similarly, you can run the corresponding script for **Spider-SYN** and **Spider-
 We save all the prediction file in *outputs/* directory.
 
 **Note:**
-Thanks for your attention. We currently provide code of Spider and TabFact for interested researchers to quickly understand our StructGPT framework, complete data and code will be coming as soon as possible.
+Thanks for your attention. We currently update code for DB-based Text-to-SQL for interested researchers to quickly understand our StructGPT framework.
+Code for TableQA will be coming tomorrow!
