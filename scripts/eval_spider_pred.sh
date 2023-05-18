@@ -1,0 +1,1 @@
+python evaluate_for_spider.py --path ./outputs/spider/output_wo_icl_v1.jsonl --db=data/spider/database --table=data/spider/tables.json --etype=exec

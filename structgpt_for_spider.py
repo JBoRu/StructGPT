@@ -25,8 +25,8 @@ class ChatGPT:
                             "6": "seventh",
                             "7": "eighth", "8": "ninth", "9": "tenth"}
 
-    def get_response_v2(self, input_text, turn_type, max_output_len):
-        message = self.create_message_v2(input_text, turn_type)
+    def get_response_v1(self, input_text, turn_type, max_output_len):
+        message = self.create_message_v1(input_text, turn_type)
         self.history_messages.append(message)
         self.history_contents.append(message['content'])
         message = self.query_API_to_get_message(self.history_messages, max_output_len)
@@ -36,7 +36,7 @@ class ChatGPT:
 
         return response
 
-    def create_message_v2(self, input_text, turn_type):
+    def create_message_v1(self, input_text, turn_type):
         if turn_type == "select_tab":
             template = self.prompt['free_generate']
             question, ser_table_name = input_text
@@ -70,7 +70,10 @@ class ChatGPT:
                     presence_penalty=0,
                 )
                 return res['choices'][0]['message']
-            except openai.error.RateLimitError:
+            except openai.error.RateLimitError as e:
+                err_mes = str(e)
+                if "You exceeded your current quota" in err_mes:
+                    print("You exceeded your current quota: %s" % openai.api_key)
                 print('openai.error.RateLimitError\nRetrying...')
                 time.sleep(30)
             except openai.error.ServiceUnavailableError:
@@ -85,6 +88,9 @@ class ChatGPT:
             except openai.error.APIConnectionError:
                 print('openai.error.APIConnectionError\nRetrying...')
                 time.sleep(20)
+            except openai.error.InvalidRequestError as e:
+                logging.exception(e)
+                exit(0)
 
 
     def parse_result(self, result):
@@ -113,7 +119,6 @@ class Retriever:
     def __init__(self, args):
         self.args = args
         self.prompt = self.load_prompt_template(args.prompt_path, args.prompt_name)
-        self.db_content = self.load_db(args.db_path)
         self.creatiing_schema(args.schema_path)
 
     def filter_table_with_col_name(self, table, selected_relations_list, selected_relations_str):
@@ -329,7 +334,7 @@ class Solver:
         self.log = []
         self.selected_relations = []
 
-    def forward_v2(self, question, db_id):
+    def forward_wo_icl_v1(self, question, db_id):
         self.LLM.reset_history()
         self.reset_history()
 
@@ -339,11 +344,11 @@ class Solver:
         if args.debug:
             print("-----Step-%d: ser_table_name:\n%s" % (iterative_step, ser_tab_col))
 
-        llm_select_tab = self.LLM.get_response_v2((question, ser_tab_col), "select_tab", max_output_len=600)
+        llm_select_tab = self.LLM.get_response_v1((question, ser_tab_col), "select_tab", max_output_len=600)
         if args.debug:
             print("-----Step-%d: llm_select_tab:\n%s" % (iterative_step, llm_select_tab))
 
-        llm_reorg_sel_tab = self.LLM.get_response_v2("", "reorg_sel_tab", max_output_len=300)
+        llm_reorg_sel_tab = self.LLM.get_response_v1("", "reorg_sel_tab", max_output_len=300)
         if args.debug:
             print("-----Step-%d: llm_reorg_sel_tab:\n%s" % (iterative_step, llm_reorg_sel_tab))
         self.LLM.reset_history_messages()
@@ -358,7 +363,7 @@ class Solver:
             print("-----Step-%d: ser_table_name:\n%s" % (iterative_step, ser_table_name))
             print("-----Step-%d: ser_fk:\n%s" % (iterative_step, ser_fk))
 
-        final_answers = self.LLM.get_response_v2((question, ser_table_name, ser_fk), "ask_final_answers",
+        final_answers = self.LLM.get_response_v1((question, ser_table_name, ser_fk), "ask_final_answers",
                                               max_output_len=300)
         if args.debug:
             print("-----Step-%d: final_answers:\n%s" % (iterative_step, final_answers))
@@ -444,7 +449,6 @@ def main(args, all_data, idx, api_key):
     if idx == -1:
         output_path = args.output_path
         chat_log_path = args.chat_log_path
-        log_path = args.log_path
     else:
         idx = "0" + str(idx) if idx < 10 else str(idx)  # 00 01 02 ... 29
         output_path = args.output_path + "_" + idx
@@ -454,25 +458,29 @@ def main(args, all_data, idx, api_key):
     solver = Solver(args)
     
     count = 0
-    mul_tabs_count = 0
+    valid_count = 0
     with open(output_path, "w") as f:
         with open(chat_log_path, "w") as fclog:
             for sample in tqdm(all_data, total=len(all_data), desc="PID: %d" % os.getpid()):
                 try:
-                    question = sample["question"]
+                    if "question" in sample:
+                        question = sample["question"]
+                    elif "SpiderSynQuestion" in sample:
+                        question = sample["SpiderSynQuestion"]
+                    else:
+                        print("Specify an error question key.")
+                        print(sample)
+                        exit(0)
                     db_id = sample['db_id']
-                    
-                    results = solver.forward_v2(question, db_id)
+
+                    if not args.icl:
+                        results = solver.forward_wo_icl_v1(question, db_id)
 
                     if results is not None:
-                        prediction, chat_history= results
-                        mul_tabs_count += 1
+                        prediction, chat_history = results
+                        valid_count += 1
                     else:
                         continue
-
-                except openai.error.InvalidRequestError as e:
-                    print(e)
-                    continue
                 except Exception as e:
                     logging.exception(e)
                     continue
@@ -481,8 +489,8 @@ def main(args, all_data, idx, api_key):
                     flag = sample['id']
                 else:
                     flag = question
-                chat = flag + "\n" + "\n******\n".join(chat_history) + "\nGold SQL: " + str(
-                    sample['query']) + "\n------------------------------------------\n"
+                chat = flag + "\n" + "\n******\n".join(chat_history) + \
+                       "\nGold SQL: " + str(sample['query']) + "\n------------------------------------------\n"
                 fclog.write(chat)
 
                 count += 1
@@ -491,7 +499,7 @@ def main(args, all_data, idx, api_key):
                     print("---------------------")
                 sample["Prediction"] = prediction
                 f.write(json.dumps(sample) + "\n")
-    print("---------------PID %d end with %d samples need only one table--------------" % (os.getpid(), mul_tabs_count))
+    print("---------------PID %d end with %d/%d samples--------------" % (os.getpid(), valid_count, count))
 
 
 def parse_args():
@@ -499,12 +507,11 @@ def parse_args():
     parser.add_argument('--input_path', default=None)
     parser.add_argument('--output_path', default=None)
     parser.add_argument('--chat_log_path', default=None)
-    parser.add_argument('--log_path', default=None)
-    parser.add_argument('--db_path', default=None)
     parser.add_argument('--schema_path', default=None)
     parser.add_argument('--debug', action="store_true")
     parser.add_argument('--prompt_path')
     parser.add_argument('--prompt_name', default="chat", )
+    parser.add_argument('--icl', action="store_true", )
     parser.add_argument('--demonstrations', default=None)
     parser.add_argument('--example_ids', default=None)
     parser.add_argument('--overwrite', action="store_true")

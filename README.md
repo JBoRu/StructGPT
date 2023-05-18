@@ -17,5 +17,41 @@ This repo provides the source code & data of our paper: [StructGPT: A general fr
   <img src="./asset/model.png" width="750" title="Overview of StructGPT" alt="">
 </p>
 
+
+## Usage
+### 0. Requirements
+You only need to install the python library and openai for querying OpenAI model API.
+
+### 1. Prepare Dataset
+<!-- We strongly suggest that download the processed datasets from [Here]() and then directly use them. -->
+Apart from downloading from their original website, we use the processed datasets from [UnifiedSKG](https://github.com/HKUNLP/UnifiedSKG).
+After downloading our processed data, you can unzip them and put them in the */data* directory.
+
+### 3. Experiment
+We have organized the running and evaluation scripts for each dataset under the */script* directory.
+
+#### Evaluation on Text-to-SQL
+For **Spider** dataset, you can directly use the following command to start running and output the evaluation results:
+```bash
+bash ./scripts/run_spider_wo_icl_v1.sh
+```
+
+<p align="center">
+  <img src="./asset/spider_wo_icl_v1.png" width="750" title="EX Result of Spider" alt="">
+</p>
+
+Similarly, you can run the corresponding script for **Spider-SYN** and **Spider-Realistic** to get the evaluation results.
+
+**Spider_Realistic**
+<p align="center">
+  <img src="./asset/spider_rea_wo_icl_v1.png" width="750" title="EX Result of Spider_Realistic" alt="">
+</p>
+
+**Spider-SYN**
+<p align="center">
+  <img src="./asset/spider_syn_wo_icl_v1.png" width="750" title="EX Result of Spider_SYN" alt="">
+</p>
+We save all the prediction file in *outputs/* directory.
+
 **Note:**
 Thanks for your attention. We currently provide code of Spider and TabFact for interested researchers to quickly understand our StructGPT framework, complete data and code will be coming as soon as possible.
