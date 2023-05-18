@@ -59,3 +59,5 @@ We save all the prediction file in *outputs/* directory.
 **Note:**
 Thanks for your attention. We currently update code for DB-based Text-to-SQL for interested researchers to quickly understand our StructGPT framework.
 Code for TableQA will be coming tomorrow!
+
+Besides, a version with better performance is on the way. Please continue to follow us!
