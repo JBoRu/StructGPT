@@ -31,6 +31,8 @@ After downloading our processed data, you can unzip them and put them in the */d
 We have organized the running and evaluation scripts for each dataset under the */script* directory.
 
 #### Evaluation on Text-to-SQL
+It is difficult to control the **randomness** of ChatGPT, so the reproduced results maybe a little different to the reported results.
+
 For **Spider** dataset, you can directly use the following command to start running and output the evaluation results:
 ```bash
 bash ./scripts/run_spider_wo_icl_v1.sh
