@@ -11,7 +11,7 @@ python3 structgpt_for_spider.py \
 
 # single process usage
 #python3 structgpt_for_spider.py \
-#--api_key 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 --num_process 1 \
+#--api_key sk-?? --num_process 1 \
 #--prompt_path ./prompts/prompt_for_spider.json --prompt_name chat_v1 \
 #--input_path ./data/spider/dev.jsonl \
 #--output_path ./outputs/spider/output_wo_icl_v1.jsonl \
