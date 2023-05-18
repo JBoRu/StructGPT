@@ -23,7 +23,7 @@ This repo provides the source code & data of our paper: [StructGPT: A general fr
 You only need to install the python library and openai for querying OpenAI model API.
 
 ### 1. Prepare Dataset
-We strongly suggest that download the processed datasets from [Here](https://drive.google.com/drive/folders/11_2pqU_MhEtmxpp3zfK_8EJ1bbQzsnfJ?usp=sharing) and then directly use them.
+We strongly suggest that download the processed datasets from [here](https://drive.google.com/drive/folders/11_2pqU_MhEtmxpp3zfK_8EJ1bbQzsnfJ?usp=sharing) and then directly use them.
 Apart from downloading from their original website, we use the processed datasets from [UnifiedSKG](https://github.com/HKUNLP/UnifiedSKG).
 After downloading our processed data, you can unzip them and put them in the */data* directory.
 
@@ -53,7 +53,7 @@ Similarly, you can run the corresponding script for **Spider-SYN** and **Spider-
 </p>
 We save all the prediction file in *outputs/* directory.
 
-## Planing
+## Plan
 **Note:**
 Thanks for your attention. We currently update code for DB-based Text-to-SQL for interested researchers to quickly understand our StructGPT framework.
 Code for TableQA will be coming tomorrow!
