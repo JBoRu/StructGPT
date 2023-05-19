@@ -30,7 +30,7 @@ After downloading our processed data, you can unzip them and put them in the */d
 ### 3. Experiment
 We have organized the running and evaluation scripts for each dataset under the */script* directory.
 
-#### Evaluation on Text-to-SQL
+#### 3.1 Evaluation on Text-to-SQL
 It is difficult to control the **randomness** of ChatGPT, so the reproduced results maybe a little different to the reported results.
 
 For **Spider** dataset, you can directly use the following command to start running and output the evaluation results:
@@ -55,7 +55,7 @@ Similarly, you can run the corresponding script for **Spider-SYN** and **Spider-
 </p>
 We save all the prediction file in *outputs/* directory.
 
-#### Evaluation on TableQA
+#### 3.2 Evaluation on TableQA
 It is difficult to control the **randomness** of ChatGPT, so the reproduced results maybe a little different to the reported results.
 
 For **TabFact** dataset, you can directly use the following command to start running and output the evaluation results:
@@ -64,19 +64,19 @@ bash ./scripts/run_tabfact_wo_icl_v1.sh
 ```
 
 <p align="center">
-  <img src="./asset/tabfact_wo_icl_v1.png" width="750" title="EX Result of tabfact" alt="">
+  <img src="./asset/tabfact_wo_icl_v1.png" width="650" title="EX Result of tabfact" alt="">
 </p>
 
 Similarly, you can run the corresponding script for **WTQ** and **WikiSQL** to get the evaluation results.
 
 **WTQ**
 <p align="center">
-  <img src="asset/wikisql_wo_icl_v1.png" width="750" title="EX Result of WTQ" alt="">
+  <img src="asset/wikisql_wo_icl_v1.png" width="650" title="EX Result of WTQ" alt="">
 </p>
 
 **WikiSQL**
 <p align="center">
-  <img src="./asset/wikisql_wo_icl_v1.png" width="750" title="EX Result of WikiSQL" alt="">
+  <img src="./asset/wikisql_wo_icl_v1.png" width="650" title="EX Result of WikiSQL" alt="">
 </p>
 We save all the prediction file in *outputs/* directory.
 
