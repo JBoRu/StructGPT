@@ -64,19 +64,19 @@ bash ./scripts/run_tabfact_wo_icl_v1.sh
 ```
 
 <p align="center">
-  <img src="./asset/tabfact_wo_icl_v1.png" width="650" title="EX Result of tabfact" alt="">
+  <img src="./asset/tabfact_wo_icl_v1.png" width="550" title="EX Result of tabfact" alt="">
 </p>
 
 Similarly, you can run the corresponding script for **WTQ** and **WikiSQL** to get the evaluation results.
 
 **WTQ**
 <p align="center">
-  <img src="asset/wikisql_wo_icl_v1.png" width="650" title="EX Result of WTQ" alt="">
+  <img src="asset/wikisql_wo_icl_v1.png" width="550" title="EX Result of WTQ" alt="">
 </p>
 
 **WikiSQL**
 <p align="center">
-  <img src="./asset/wikisql_wo_icl_v1.png" width="650" title="EX Result of WikiSQL" alt="">
+  <img src="./asset/wikisql_wo_icl_v1.png" width="550" title="EX Result of WikiSQL" alt="">
 </p>
 We save all the prediction file in *outputs/* directory.
 
