@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-python3 structgpt_for_spider.py \
+python3 structgpt_for_text_to_sql.py \
 --api_key ./api_key.txt --num_process 21 \
 --prompt_path ./prompts/prompt_for_spider.json --prompt_name chat_v1 \
 --input_path ./data/spider-realistic/spider-realistic.json \
@@ -9,8 +9,8 @@ python3 structgpt_for_spider.py \
 --schema_path ./data/spider-realistic/tables.json
 
 # single process usage
-#python3 structgpt_for_spider.py \
-#--api_key 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 --num_process 1 \
+#python3 structgpt_for_text_to_sql.py \
+#--api_key sk-?? --num_process 1 \
 #--prompt_path ./prompts/prompt_for_spider.json --prompt_name chat_v1 \
 #--input_path ./data/spider-realistic/spider-realistic.json \
 #--output_path ./outputs/spider-realistic/output_wo_icl_v1.jsonl \

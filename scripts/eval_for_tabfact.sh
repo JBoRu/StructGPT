@@ -1,0 +1,1 @@
+python evaluate_for_tabfact.py --ori_path ./data/tabfact/tab_fact_test.json --inp_path ./outputs/tabfact/tabfact_test_output.jsonl

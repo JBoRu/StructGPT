@@ -25,10 +25,11 @@ class ChatGPT:
     def get_response_v1(self, input_text, turn_type):
         message = self.create_message_v1(input_text, turn_type)
         self.history_contents.append(message['content'])
+        self.history_messages.append(message)
         message = self.query_API_to_get_message([message])
         self.history_contents.append(message['content'])
+        self.history_messages.append(message)
         response = message['content']
-
         return response
 
     def create_message_v1(self, input_text, turn_type):
@@ -64,7 +65,10 @@ class ChatGPT:
                     presence_penalty=0,
                 )
                 return res['choices'][0]['message']
-            except openai.error.RateLimitError:
+            except openai.error.RateLimitError as e:
+                err_mes = str(e)
+                if "You exceeded your current quota" in err_mes:
+                    print("You exceeded your current quota: %s" % openai.api_key)
                 print('openai.error.RateLimitError\nRetrying...')
                 time.sleep(30)
             except openai.error.ServiceUnavailableError:
@@ -101,6 +105,9 @@ class ChatGPT:
     def reset_history(self):
         self.history_messages = []
         self.history_contents = []
+
+    def reset_history_messages(self):
+        self.history_messages = []
 
     def load_prompt_template(self, prompt_path, prompt_name):
         if prompt_path.endswith(".json"):
@@ -146,7 +153,6 @@ class Solver:
                            max_tokens=args.max_tokens)
         self.SLM = Retriever(args)
         self.max_serialization_tokens = args.max_llm_input_tokens
-        self.log = []
         self.selected_relations = []
 
     def forward(self, question, table):
@@ -155,64 +161,50 @@ class Solver:
 
         iterative_step = 0
 
-        while True:
-            # select
-            table = self.normalize_table_header(table)
-            header = table['header']
-            ser_hea = self.SLM.serialize_headers(header)
-            self.log.append(ser_hea)
-            if args.debug:
-                print("Step-%d: ser_hea:%s" % (iterative_step, ser_hea))
+        # select
+        table = self.normalize_table_header(table)
+        header = table['header']
+        ser_hea = self.SLM.serialize_headers(header)
+        if args.debug:
+            print("Step-%d: ser_hea:%s" % (iterative_step, ser_hea))
 
-            llm_selected_cols = self.LLM.get_response_v1((ser_hea, question), "columns_select")
-            self.log.append(llm_selected_cols)
-            if args.debug:
-                print("Step-%d: llm_selected_cols:%s" % (iterative_step, llm_selected_cols))
+        llm_selected_cols = self.LLM.get_response_v1((ser_hea, question), "columns_select")
+        self.LLM.reset_history_messages()
+        if args.debug:
+            print("Step-%d: llm_selected_cols:%s" % (iterative_step, llm_selected_cols))
 
-            selected_cols_list = self.parse_selected_cols(llm_selected_cols, header)
-            self.log.append(selected_cols_list)
-            if args.debug:
-                print("Step-%d: selected_cols_list:%s" % (iterative_step, selected_cols_list))
+        selected_cols_list = self.parse_selected_cols(llm_selected_cols, header)
+        if args.debug:
+            print("Step-%d: selected_cols_list:%s" % (iterative_step, selected_cols_list))
 
-            filtered_table = self.SLM.filter_table_with_col_name(table, selected_cols_list, llm_selected_cols)
-            self.log.append(filtered_table)
-            if args.debug:
-                print("Step-%d: filtered_table:%s" % (iterative_step, filtered_table))
+        filtered_table = self.SLM.filter_table_with_col_name(table, selected_cols_list, llm_selected_cols)
+        if args.debug:
+            print("Step-%d: filtered_table:%s" % (iterative_step, filtered_table))
 
+        candidate_rows = self.serialize_table(filtered_table)
+        if args.debug:
+            print("Step-%d: candidate_rows:%s" % (iterative_step, candidate_rows))
 
-            if True:
-                candidate_rows = self.serialize_table(filtered_table)
-                self.log.append(candidate_rows)
-                if args.debug:
-                    print("Step-%d: candidate_rows:%s" % (iterative_step, candidate_rows))
+        selected_columns = self.SLM.serialize_headers(selected_cols_list)
+        choose_rows = self.LLM.get_response_v1((selected_columns, candidate_rows, question), "rows_select")
+        self.LLM.reset_history_messages()
+        try:
+            choose_row_list = self.parse_row_idx(choose_rows)
+            filtered_table = self.filter_table_with_rows_constraints(filtered_table, choose_row_list)
+        except Exception as e:
+            logging.exception(e)
+            # print(candidate_rows)
+            # print(choose_rows)
+        if args.debug:
+            print("Step-%d: filtered_table:%s" % (iterative_step, filtered_table))
 
-                selected_columns = self.SLM.serialize_headers(selected_cols_list)
-                choose_rows = self.LLM.get_response_v1((selected_columns, candidate_rows, question), "rows_select")
-                try:
-                    choose_row_list = self.parse_row_idx(choose_rows)
-                    filtered_table = self.filter_table_with_rows_constraints(filtered_table, choose_row_list)
+        serialized_table = self.serialize_table(filtered_table)
+        if args.debug:
+            print("Step-%d: serialized_table:%s" % (iterative_step, serialized_table))
 
-                except Exception as e:
-                    logging.exception(e)
-                    print(candidate_rows)
-                    print(choose_rows)
-                self.log.append(filtered_table)
-                if args.debug:
-                    print("Step-%d: filtered_table:%s" % (iterative_step, filtered_table))
-
-            serialized_table = self.serialize_table(filtered_table)
-            self.log.append(serialized_table)
-            if args.debug:
-                print("Step-%d: serialized_table:%s" % (iterative_step, serialized_table))
-
-            final_ans_or_next_que = self.LLM.get_response_v1((question, serialized_table),
-                                                             "ask_final_answer_or_next_question")
-            self.log.append(final_ans_or_next_que)
-
-            
-            final_answers = self.parse_result(final_ans_or_next_que, "final_answer")
-            self.log.append(final_answers)
-            break
+        final_answers = self.LLM.get_response_v1((question, serialized_table),
+                                                         "ask_final_answer_or_next_question")
+        self.LLM.reset_history_messages()
 
         return final_answers, self.LLM.history_contents, self.log
 
@@ -235,9 +227,6 @@ class Solver:
         answer_tmp_2 = final_response
         return [answer_tmp_1, answer_tmp_2]
 
-
-
-
     def parse_result(self, response, parse_type):
         response = response.lower()
         if parse_type == "next_question":
@@ -254,86 +243,14 @@ class Solver:
                 final_answer = 'unknown'
             elif 'yes' in response:
                 final_answer = 'entailed'
-            else :
+            else:
                 final_answer='refuted'
 
             return final_answer
 
-    def classify_triples(self, filtered_triples_per_hop):
-        cvt_triples, mid_triples, entstr_triples = set(), set(), set()
-        if 0 in filtered_triples_per_hop:
-            triples_0 = filtered_triples_per_hop[0]
-        else:
-            triples_0 = []
-        if 1 in filtered_triples_per_hop:
-            triples_1 = filtered_triples_per_hop[1]
-        else:
-            triples_1 = []
-
-        if len(triples_1) == 0:
-            for tri in triples_0:
-                if self.is_ent(tri[2]):
-                    mid_triples.add(tuple(tri))
-                else:
-                    entstr_triples.add(tuple(tri))
-        else:
-            for tri in triples_1:
-                cvt_triples.add(tuple(tri))
-        return cvt_triples, mid_triples, entstr_triples
-
-    def serialize_constraints(self, table, constraints):
-        new_table = dict()
-        header = table['header']
-        rows = table['rows']
-        constraint_col_idx = [idx for idx, rel in enumerate(header) if rel.lower() in constraints.lower()]
-
-        new_rows = []
-        for row in rows:
-            new_row = [row[idx] for idx in constraint_col_idx]
-            new_rows.append(new_row)
-        new_header = [header[idx] for idx in constraint_col_idx]
-        new_table["header"] = new_header
-        new_table["rows"] = new_rows
-
-        seri_table = self.serialize_table(new_table)
-        return seri_table
-
-
-    def has_constraints(self, constraint_response):
-        if "no" in constraint_response.lower():
-            return False
-        else:
-            return True
-
-    def is_end_v2(self, response, iterative_step):
-        if "final" in response.lower() or iterative_step > 3:
-            return True
-        else:
-            return False
-
     def reset_history(self):
         self.log = []
         self.selected_relations = []
-
-    def filter_table_with_constraints(self, table, constraints):
-        new_table = dict()
-        header = table['header']
-        rows = table['rows']
-        constraint_col_idx = [idx for idx, rel in enumerate(header) if rel.lower() in constraints.lower()]
-
-        new_rows = []
-        for row in rows:
-            flag = True
-            for idx in constraint_col_idx:
-                if row[idx].lower() not in constraints.lower():
-                    flag = False
-                    break
-            if flag:
-                new_rows.append(row)
-
-        new_table["header"] = header
-        new_table["rows"] = new_rows
-        return new_table
 
     def serialize_table(self, table):
         header = table['header']
@@ -344,7 +261,7 @@ class Solver:
             for rel, ent in zip(header, row):
                 pair = "(" + rel + ", " + ent + ")"
                 pairs.append(pair)
-            
+
             line = 'item ' + str(idx + 1) + ': ' + "; ".join(pairs)
             lines.append(line)
         output = "\n".join(lines)
@@ -373,25 +290,6 @@ class Solver:
         new_table["rows"] = new_rows
         return new_table
 
-    def filter_table_with_rows_constraints_v1(self, table, row_constraints_str):
-        new_table = dict()
-        header = table['header']
-        rows = table['rows']
-        new_rows = []
-        for rid, row in enumerate(rows):
-            if " " + str(rid+1) + "," in row_constraints_str or " " + str(rid+1) + "." in row_constraints_str or " " + str(rid+1) + " " in row_constraints_str:
-                new_rows.append(row)
-        if len(new_rows) == 0:
-            for rid, row in enumerate(rows):
-                if str(rid + 1) in row_constraints_str:
-                    new_rows.append(row)
-        if len(new_rows) == 0:
-            raise NotImplementedError
-        else:
-            new_table["header"] = header
-            new_table["rows"] = new_rows
-            return new_table
-
     def normalize_table_header(self, table):
         header = table['header']
         rows = table['rows']
@@ -411,12 +309,10 @@ def main(args, all_data, idx, api_key):
     if idx == -1:
         output_path = args.output_path
         chat_log_path = args.chat_log_path
-        log_path = args.log_path
     else:
         idx = "0" + str(idx) if idx < 10 else str(idx)  # 00 01 02 ... 29
         output_path = args.output_path + "_" + idx
         chat_log_path = args.chat_log_path + "_" + idx
-        log_path = args.log_path + "_" + idx
 
     print("Start PID %d and save to %s" % (os.getpid(), output_path))
 
@@ -425,41 +321,36 @@ def main(args, all_data, idx, api_key):
     count = 0
     with open(output_path, "w") as f:
         with open(chat_log_path, "w") as fclog:
-            with open(log_path, "w") as flog:
-                for sample in tqdm(all_data, total=len(all_data), desc="PID: %d" % os.getpid()):
-                    try:
-                        question = sample["statement"]
-                        question = question+"?" if not question.endswith("?") else question
-                        table = sample['table']
-                        prediction, chat_history, record = solver.forward(question, table)
-                    except openai.error.InvalidRequestError as e:
-                        print(e)
-                        continue
-                    except Exception as e:
-                        logging.exception(e)
-                        continue
-                    if 'id' in sample.keys():
-                        flag = str(sample['id'])
-                    else:
-                        flag = question
+            for sample in tqdm(all_data, total=len(all_data), desc="PID: %d" % os.getpid()):
+                try:
+                    question = sample["statement"] if 'statement' in sample else sample['question']
+                    question = question+"?" if not question.endswith("?") else question
+                    table = sample['table']
+                    prediction, chat_history, record = solver.forward(question, table)
+                except openai.error.InvalidRequestError as e:
+                    print(e)
+                    continue
+                except Exception as e:
+                    logging.exception(e)
+                    continue
+                if 'id' in sample.keys():
+                    flag = str(sample['id'])
+                else:
+                    flag = question
 
-                    try:
-                        chat = flag + "\n" + "\n******\n".join(chat_history) + "\nAnswers: " + str(
-                            sample['seq_out']) + "\n------------------------------------------\n"
-                        fclog.write(chat)
-                    except Exception as e:
-                        print(e)
-                    record = [str(r) for r in record]
-                    log = flag + "\n" + "\n******\n".join(record) + "\nAnswers: " + str(
+                try:
+                    chat = flag + "\n" + "\n******\n".join(chat_history) + "\nAnswers: " + str(
                         sample['seq_out']) + "\n------------------------------------------\n"
-                    flog.write(log)
-                    count += 1
-                    if count < 5:
-                        print(sample['seq_out'])
-                        print(prediction)
-                        print("---------------------")
-                    sample["Prediction"] = prediction
-                    f.write(json.dumps(sample) + "\n")
+                    fclog.write(chat)
+                except Exception as e:
+                    print(e)
+                count += 1
+                if count < 5:
+                    print(sample['seq_out'])
+                    print(prediction)
+                    print("---------------------")
+                sample["Prediction"] = prediction
+                f.write(json.dumps(sample) + "\n")
 
 
 def parse_args():
@@ -467,24 +358,13 @@ def parse_args():
     parser.add_argument('--input_path', default=None)
     parser.add_argument('--output_path', default=None)
     parser.add_argument('--chat_log_path', default=None)
-    parser.add_argument('--log_path', default=None)
-    parser.add_argument('--model_path', default=None)
     parser.add_argument('--debug', action="store_true")
     parser.add_argument('--prompt_path')
     parser.add_argument('--prompt_name', default="chat", )
-    parser.add_argument('--bagging_type', default="llm", )
     parser.add_argument('--overwrite', action="store_true")
     parser.add_argument('--num_process', default=1, type=int, help='the number of multi-process')
-    parser.add_argument('--topk', default=10, type=int, help='retrieve the topk score paths')
     parser.add_argument('--max_tokens', default=10, type=int, help='retrieve the topk score paths')
     parser.add_argument('--api_key', default="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", type=str)
-    parser.add_argument('--filter_score', default=0.0, type=float, help='the minimal cosine similarity')
-    parser.add_argument('--kg_source_path', default=None, help='the sparse triples file')
-    parser.add_argument('--ent_type_path', default=None, help='the file of entities type of sparse triples')
-    parser.add_argument('--ent2id_path', default=None, help='the sparse ent2id file')
-    parser.add_argument('--rel2id_path', default=None, help='the sparse rel2id file')
-    parser.add_argument('--ent2name_path', default=None, help='the sparse rel2id file')
-    parser.add_argument('--max_triples_per_relation', default=40, type=int)
     parser.add_argument('--max_llm_input_tokens', default=3400, type=int)
 
     args = parser.parse_args()
@@ -504,6 +384,16 @@ if __name__ == '__main__':
     with open(args.input_path, "rb") as f:
         all_data = json.load(f)
         print("Totally %d test examples." % len(all_data))
+
+    # Test data that has not yet been predicted
+    # if os.path.exists(args.output_path):
+    #     with open(args.output_path, "r") as f:
+    #         all_lines = f.readlines()
+    #         all_lines = [json.loads(line.strip("\n")) for line in all_lines]
+    #         already_id = [line['id'] for line in all_lines]
+    #         all_data = [data for data in all_data if data['id'] not in already_id]
+    #         print("There are %d test examples need to be processed." % len(all_data))
+
     if args.num_process == 1:
         main(args, all_data, idx=-1, api_key=args.api_key)
     else:

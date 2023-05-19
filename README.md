@@ -1,6 +1,6 @@
 # StructGPT: A general framework for Large Language Model to Reason on Structured Data
 
-This repo provides the source code & data of our paper: [StructGPT: A general framework for Large Language Model to Reason on Structured Data](https://arxiv.org/pdf/2305.09645.pdf) (Arxiv 2023).
+This repo provides the source code & data of our paper: [StructGPT: A General Framework for Large Language Model to Reason on Structured Data](https://arxiv.org/pdf/2305.09645.pdf) (Arxiv 2023).
 
 ```
 @InProceedings{jiang-safe-2022,
@@ -55,9 +55,34 @@ Similarly, you can run the corresponding script for **Spider-SYN** and **Spider-
 </p>
 We save all the prediction file in *outputs/* directory.
 
+#### Evaluation on TableQA
+It is difficult to control the **randomness** of ChatGPT, so the reproduced results maybe a little different to the reported results.
+
+For **TabFact** dataset, you can directly use the following command to start running and output the evaluation results:
+```bash
+bash ./scripts/run_tabfact_wo_icl_v1.sh
+```
+
+<p align="center">
+  <img src="./asset/tabfact_wo_icl_v1.png" width="750" title="EX Result of tabfact" alt="">
+</p>
+
+Similarly, you can run the corresponding script for **WTQ** and **WikiSQL** to get the evaluation results.
+
+**WTQ**
+<p align="center">
+  <img src="asset/wikisql_wo_icl_v1.png" width="750" title="EX Result of WTQ" alt="">
+</p>
+
+**WikiSQL**
+<p align="center">
+  <img src="./asset/wikisql_wo_icl_v1.png" width="750" title="EX Result of WikiSQL" alt="">
+</p>
+We save all the prediction file in *outputs/* directory.
+
 ## Plan
 **Note:**
-Thanks for your attention. We currently update code for DB-based Text-to-SQL for interested researchers to quickly understand our StructGPT framework.
-Code for TableQA will be coming tomorrow!
+Thanks for your attention. We currently update code for DB-based Text-to-SQL and Table-based QA.
+Code for KGQA will be coming tomorrow!
 
 Besides, a version with better performance is on the way. Please continue to follow us!
