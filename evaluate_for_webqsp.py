@@ -39,6 +39,8 @@ def evaluate(ori_path, pred_path, error_cases_output, write_flag):
             data = all_pred_data[data["ID"]]
             question = data['Question']
             pred = data['Prediction'].lower()
+            if "i'm sorry" in pred:
+                pred = ''
 
             answers = data['Answers']
             aliases = data['Aliases']
