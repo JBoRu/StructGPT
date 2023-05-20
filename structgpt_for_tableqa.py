@@ -26,7 +26,7 @@ class ChatGPT:
         message = self.create_message_v1(input_text, turn_type)
         self.history_contents.append(message['content'])
         self.history_messages.append(message)
-        message = self.query_API_to_get_message([message])
+        message = self.query_API_to_get_message(self.history_messages)
         self.history_contents.append(message['content'])
         self.history_messages.append(message)
         response = message['content']
@@ -36,12 +36,12 @@ class ChatGPT:
         if turn_type == "columns_select":
             template = self.prompt['columns_select']
             columns, question = input_text
-            question = question.capitalize()
+            # question = question.capitalize()
             input_text = template.format(question=question, columns=columns)
         elif turn_type == 'rows_select':
             template = self.prompt['rows_select']
             selected_cols, rows, question = input_text
-            question = question.capitalize()
+            # question = question.capitalize()
             input_text = template.format(selected_columns=selected_cols, rows=rows, question=question)
         elif turn_type == "ask_final_answer_or_next_question":
             question, serialized_table = input_text
@@ -121,16 +121,17 @@ class Retriever:
         self.args = args
 
     def serialize_headers(self, headers):
-        headers = ['"' + header.replace("\n", " ") + '"' for header in headers]
-        if len(headers) == 0:
-            ser_hea = ""
-        elif len(headers) == 1:
-            ser_hea = headers[0]
-        elif len(headers) == 2:
-            ser_hea = headers[0] + " and " + headers[1]
-        else:
-            ser_hea = ", ".join(headers[0:-1]) + ", and " + headers[-1]
-
+        # headers = ['"' + header.replace("\n", " ") + '"' for header in headers]
+        headers = [header.replace("\n", " ") for header in headers]
+        # if len(headers) == 0:
+        #     ser_hea = ""
+        # elif len(headers) == 1:
+        #     ser_hea = headers[0]
+        # elif len(headers) == 2:
+        #     ser_hea = headers[0] + " and " + headers[1]
+        # else:
+        #     ser_hea = ", ".join(headers[0:-1]) + ", and " + headers[-1]
+        ser_hea = ", ".join(headers)
         return ser_hea
 
     def filter_table_with_col_name(self, table, selected_relations_list, selected_relations_str):
@@ -324,7 +325,8 @@ def main(args, all_data, idx, api_key):
             for sample in tqdm(all_data, total=len(all_data), desc="PID: %d" % os.getpid()):
                 try:
                     question = sample["statement"] if 'statement' in sample else sample['question']
-                    question = question+"?" if not question.endswith("?") else question
+                    question = question + "?" if not question.endswith("?") else question
+                    # question = question.capitalize()
                     table = sample['table']
                     prediction, chat_history, record = solver.forward(question, table)
                 except openai.error.InvalidRequestError as e:

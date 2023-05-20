@@ -80,9 +80,23 @@ Similarly, you can run the corresponding script for **WTQ** and **WikiSQL** to g
 </p>
 We save all the prediction file in *outputs/* directory.
 
-## Plan
-**Note:**
-Thanks for your attention. We currently update code for DB-based Text-to-SQL and Table-based QA.
-Code for KGQA will be coming tomorrow!
+#### 3.3 Evaluation on KGQA
+It is difficult to control the **randomness** of ChatGPT, so the reproduced results maybe a little different to the reported results.
 
-Besides, a version with better performance is on the way. Please continue to follow us!
+For **WebQSP** dataset, you can directly use the following command to start running and output the evaluation results:
+```bash
+bash ./scripts/run_webqsp_wo_icl_v1.sh
+```
+
+<p align="center">
+  <img src="./asset/webqsp_wo_icl_v1.png" width="550" title="EX Result of webqsp" alt="">
+</p>
+
+Similarly, you can run the corresponding script for **MetaQA (1hop,2hop,3hop)** to get the evaluation results.
+
+We save all the prediction file in *outputs/* directory.
+
+## Plan
+Thanks for your attention.
+A version with better performance is on the way.
+Please continue to follow us!
