@@ -122,7 +122,6 @@ class Retriever:
 
     def serialize_headers(self, headers):
         # headers = ['"' + header.replace("\n", " ") + '"' for header in headers]
-        headers = [header.replace("\n", " ") for header in headers]
         # if len(headers) == 0:
         #     ser_hea = ""
         # elif len(headers) == 1:
@@ -131,6 +130,7 @@ class Retriever:
         #     ser_hea = headers[0] + " and " + headers[1]
         # else:
         #     ser_hea = ", ".join(headers[0:-1]) + ", and " + headers[-1]
+        headers = [header.replace("\n", " ") for header in headers]
         ser_hea = ", ".join(headers)
         return ser_hea
 
@@ -326,7 +326,6 @@ def main(args, all_data, idx, api_key):
                 try:
                     question = sample["statement"] if 'statement' in sample else sample['question']
                     question = question + "?" if not question.endswith("?") else question
-                    # question = question.capitalize()
                     table = sample['table']
                     prediction, chat_history, record = solver.forward(question, table)
                 except openai.error.InvalidRequestError as e:

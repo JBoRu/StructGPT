@@ -71,7 +71,7 @@ Similarly, you can run the corresponding script for **WTQ** and **WikiSQL** to g
 
 **WTQ**
 <p align="center">
-  <img src="asset/wikisql_wo_icl_v1.png" width="550" title="EX Result of WTQ" alt="">
+  <img src="asset/wtq_wo_icl_v1.png" width="550" title="EX Result of WTQ" alt="">
 </p>
 
 **WikiSQL**
