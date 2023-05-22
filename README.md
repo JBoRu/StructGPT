@@ -3,8 +3,8 @@
 This repo provides the source code & data of our paper: [StructGPT: A General Framework for Large Language Model to Reason on Structured Data](https://arxiv.org/pdf/2305.09645.pdf) (Arxiv 2023).
 
 ```
-@InProceedings{jiang-safe-2022,
-  author =  {Jinhao Jiang, Kun Zhou, Zican Dong, Keming Ye, Wayne Xin Zhao and Ji-Rong Wen},
+@InProceedings{Jiang-StructGPT-2022,
+  author =  {Jinhao Jiang and Kun Zhou and Zican Dong and Keming Ye and Wayne Xin Zhao and Ji-Rong Wen},
   title =   {StructGPT: A general framework for Large Language Model to Reason on Structured Data},
   year =    {2023},  
   journal={arXiv preprint arXiv:2305.09645},
