@@ -1,4 +1,4 @@
-# StructGPT: A general framework for Large Language Model to Reason on Structured Data
+# StructGPT: A General Framework for Large Language Model to Reason on Structured Data
 
 This repo provides the source code & data of our paper: [StructGPT: A General Framework for Large Language Model to Reason on Structured Data](https://arxiv.org/pdf/2305.09645.pdf) (Arxiv 2023).
 

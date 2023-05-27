@@ -517,7 +517,7 @@ def parse_args():
     parser.add_argument('--overwrite', action="store_true")
     parser.add_argument('--num_process', default=1, type=int, help='the number of multi-process')
     parser.add_argument('--max_tokens', default=10, type=int, help='retrieve the topk score paths')
-    parser.add_argument('--api_key', default="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", type=str)
+    parser.add_argument('--api_key', default="", type=str)
     parser.add_argument('--max_llm_input_tokens', default=3400, type=int)
 
     args = parser.parse_args()
